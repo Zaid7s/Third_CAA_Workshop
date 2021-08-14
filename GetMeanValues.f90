@@ -16,7 +16,8 @@ MODULE GetMeanValues
     
     PUBLIC:: MeanValues
 
-    TYPE(CFLRampObject):: thisCFLObject
+    TYPE(CFLRampObject) :: thisCFLObject
+
     INTEGER, PARAMETER:: rDef = REAL64
 
     CONTAINS
@@ -766,10 +767,7 @@ MODULE GetMeanValues
                     END IF
                     
                     CALL CFL_Ramping(   object          = thisCFLObject    ,&
-                                        Residual        = Residual(nT)     ,&
-                                        nu              = nu_physical      ,&
-                                        numTimeSteps    = numTimeSteps     ,&
-                                        nT              = nT)
+                        CFL              = nu_physical  )
 !
 !                    CALL CFL_Ramping(   Residual        = Residual(nT)     ,&
 !                                        nu              = nu_physical      ,&
