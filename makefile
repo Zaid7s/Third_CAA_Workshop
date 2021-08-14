@@ -44,7 +44,8 @@ OBJS = Main.o \
 	   BlockTriDiSolver1D.o
 
 $(CMD): $(OBJS)
-	$(LINK_AND_LOAD) -o $(@) $(OBJS)
+	($(LINK_AND_LOAD) -o $(@) $(OBJS));
+	(./compile.sh)
 
 Main.o: \
  Main.f90 \

@@ -83,32 +83,54 @@ MODULE GetCFL_Ramping
 
     IMPLICIT NONE
     PRIVATE
-    PUBLIC :: CFL_Ramping, &
-        CFLRampObject
+    PUBLIC :: CFLRampObject,  CreateObject, CFL_Ramping, DestroyObject
 
     INTEGER, PARAMETER:: rDef = REAL64
+
+    INTERFACE CreateObject
+        MODULE PROCEDURE CreateRampingObject
+    END INTERFACE CreateObject
 
     INTERFACE CFL_Ramping
         MODULE PROCEDURE CFL_Ramp
     END INTERFACE CFL_Ramping
 
-        TYPE CFLRampObject
-            PRIVATE
+    INTERFACE DestroyObject
+        MODULE PROCEDURE DestroyRampingObject
+    END INTERFACE DestroyObject
 
-            REAL(KIND = rDef)    ::  nu 
-            REAL(KIND = rDef)    :: Residual
-            INTEGER   ::  numTimeSteps, &
-                nT
+    TYPE CFLRampObject
+        PRIVATE
 
-        END TYPE CFLRampObject
+        REAL(KIND = rDef)    ::  nu 
+        REAL(KIND = rDef)    :: Residual
+        INTEGER   ::  numTimeSteps, &
+            nT
 
-        !!! Define Local Variables !!!
-        REAL(KIND = rDef):: epsi
         REAL(KIND = rDef), DIMENSION(:), ALLOCATABLE:: Store_Residual
-!!
-    CONTAINS
+END TYPE CFLRampObject
 
-        SUBROUTINE CFL_Ramp( object, &
+    !!! Define Local Variables !!!
+    REAL(KIND = rDef):: epsi
+!!
+CONTAINS
+    SUBROUTINE CreateRampingObject(object,Residual,numTimeSteps,nT)
+
+        TYPE(CFLRampObject), INTENT(INOUT):: object
+        INTEGER, INTENT(IN)   ::  numTimeSteps, &
+            nT
+
+        REAL(KIND = rDef),INTENT(IN)    :: Residual
+        object%Residual = Residual
+        object%numTimeSteps = numTimeSteps
+        object%nT = nT
+
+        ALLOCATE(object%Store_Residual(object%numTimeSteps))
+
+
+    END SUBROUTINE CreateRampingObject
+
+    SUBROUTINE CFL_Ramp( object, &
         CFL)
 
         TYPE(CFLRampObject), INTENT(INOUT):: object
@@ -118,32 +140,33 @@ MODULE GetCFL_Ramping
         object%nu = CFL
 
         ! SUBROUTINE CFL_Ramping( Residual        ,&
-   !                         nu              ,&
-   !                         numTimeSteps    ,&
-   !                         nT)
+        !                         nu              ,&
+        !                         numTimeSteps    ,&
+        !                         nT)
 
-   ! REAL(KIND = rDef), INTENT(INOUT)    ::  nu 
-   ! REAL(KIND = rDef), INTENT(IN)       :: Residual
-   ! INTEGER,  INTENT(IN) ::  numTimeSteps, &
-   !                          nT
+        ! REAL(KIND = rDef), INTENT(INOUT)    ::  nu 
+        ! REAL(KIND = rDef), INTENT(IN)       :: Residual
+        ! INTEGER,  INTENT(IN) ::  numTimeSteps, &
+        !                          nT
 
-   ! !!! Define Local Variables !!!
-   ! REAL(KIND = rDef):: epsi
-   ! REAL(KIND = rDef), DIMENSION(:), ALLOCATABLE:: Store_Residual
+        ! !!! Define Local Variables !!!
+        ! REAL(KIND = rDef):: epsi
+        ! REAL(KIND = rDef), DIMENSION(:), ALLOCATABLE:: Store_Residual
 
-        ALLOCATE(Store_Residual(object%numTimeSteps))
 
-        Store_Residual(object%nT) = object%Residual
+        object%Store_Residual(object%nT) = object%Residual
+
+        WRITE(6,*) object%Store_Residual(object%nT), object%Residual, object%nT
 
         IF (object%nT >= 2) THEN
-            epsi = Store_Residual(object%nT-1)/Store_Residual(object%nT)
+            epsi = object%Store_Residual(object%nT-1)/object%Store_Residual(object%nT)
         ELSE
             epsi = 1.0_rDef
         END IF
 
         object%nu = epsi*object%nu
 
-    !!!! This sets the minimum CFL !!!!!
+        !!!! This sets the minimum CFL !!!!!
         IF (object%nu < 1.0_rDef) THEN
             object%nu = 1.0_rDef
         END IF
@@ -154,4 +177,9 @@ MODULE GetCFL_Ramping
 
     END SUBROUTINE CFL_Ramp
 
+    SUBROUTINE DestroyRampingObject(object)
+        TYPE(CFLRampObject), INTENT(INOUT):: object
+        DEALLOCATE(object%Store_Residual)
+
+    END SUBROUTINE DestroyRampingObject
 END MODULE GetCFL_Ramping

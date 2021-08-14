@@ -766,13 +766,19 @@ MODULE GetMeanValues
                         Residual(nT) = l2Res(nT)
                     END IF
                     
+                    CALL CreateObject(object = thisCFLObject, & 
+                        Residual        = Residual(nT) ,&
+                        numTimeSteps    = numTimeSteps     ,&
+                        nT              = nT)
+
                     CALL CFL_Ramping(   object          = thisCFLObject    ,&
                         CFL              = nu_physical  )
+
+                    CALL DestroyObject(object = thisCFLObject)
+
 !
 !                    CALL CFL_Ramping(   Residual        = Residual(nT)     ,&
 !                                        nu              = nu_physical      ,&
-!                                        numTimeSteps    = numTimeSteps     ,&
-!                                        nT              = nT)
 !!
                     !IF (nT == 1) THEN
                     !    CALL CFL_Ramping2(  Residual1   = Residual(nT)  ,&
